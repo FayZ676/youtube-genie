@@ -46,33 +46,22 @@ def extract_titles(driver, url):
 
         # Find the video list
         video_list = find_video_list(driver)
-        print(video_list)
+        video_elements = video_list.find_elements(By.XPATH, ".//ytd-video-renderer")
 
-        video_json_list = []
+        titles_list = []
 
-        # transcript_items = video_list.find_elements(
-        #     By.CLASS_NAME, "caption__caption___v5MZY"
-        # )
+        for video_element in video_elements:
+            # Extract the title text from the video element
+            title_element = video_element.find_element(
+                By.XPATH, ".//a[@id='video-title']"
+            )
+            title = title_element.get_attribute("title")
+            titles_list.append({"title": title})
 
-        # # Loop through the <div> elements and extract and format the content
-        # for item in transcript_items:
-        #     aria_label = item.get_attribute("aria-label")
-        #     if aria_label:
-        #         # Split the aria-label into timestamp and message
-        #         parts = aria_label.split(" ", 1)
-        #         if len(parts) == 2:
-        #             timestamp = parts[0]
-        #             message = parts[1]
-        #             # Create a JSON item
-        #             transcript_json = {
-        #                 "timestamp": timestamp,
-        #                 "message": message,
-        #             }
-        #             transcript_json_list.append(transcript_json)
     else:
         print("Error: Invalid URL.")
         return
-    return video_json_list
+    return titles_list
 
 
 def main():
@@ -81,9 +70,10 @@ def main():
 
     # Initialize WebDriver
     driver = initialize_driver(chromedriver_path)
-    titles = extract_titles(
+    titles_list = extract_titles(
         driver, "https://www.youtube.com/results?search_query=crypto"
     )
+    print(titles_list)
 
     # Close the WebDriver
     driver.quit()
