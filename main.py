@@ -69,6 +69,11 @@ def extract_titles(driver, url):
         return []
 
 
+def input_to_search_string(input_string):
+    search_string = input_string.replace(" ", "+")
+    return search_string
+
+
 def main():
     # Define the URL and path to Chromedriver
     chromedriver_path = os.getenv("CHROMEDRIVER_PATH")
@@ -76,9 +81,13 @@ def main():
     # Initialize WebDriver
     driver = initialize_driver(chromedriver_path)
 
+    # Get video description from user input
+    video_description = input("Enter a video search query: ")
+    video_search_string = input_to_search_string(video_description)
+
     # Extract titles from a YouTube search results page
     titles_list = extract_titles(
-        driver, "https://www.youtube.com/results?search_query=javascript"
+        driver, f"https://www.youtube.com/results?search_query={video_search_string}"
     )
 
     print(titles_list)
