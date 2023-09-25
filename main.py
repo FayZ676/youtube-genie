@@ -4,7 +4,13 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import openai
+from dotenv import load_dotenv
 import os
+
+# Load environment variables from .env
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 def initialize_driver(chromedriver_path: str):
@@ -69,6 +75,35 @@ def extract_titles(driver, url):
         return []
 
 
+def query_transcripts(titles: str, search_string: str):
+    """Queries the transcripts for a specific term."""
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "Generate engaging YouTube video titles based on the top-performing titles for a given youtube video category. The user has provided a search string for the video they want to make and an array of top performing video titles. You should analyze the top video titles and generate creative and attention-grabbing titles that are likely to increase viewership and engagement. Consider using persuasive language, keywords, and appealing themes to attract a wider audience. Keep the titles concise and relevant to the content. Remember that the goal is to captivate viewers and encourage them to click on the video. Generate multiple title options for the user to choose from, ensuring they are catchy and aligned with the user's content.",
+            },
+            {
+                "role": "user",
+                "content": "Desired video theme: "
+                + search_string
+                + "\n\n"
+                + "Top Performing video titles: "
+                + titles,
+            },
+        ],
+        temperature=1,
+        max_tokens=1000,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+    )
+
+    response = response.choices[0].message.content
+    return response
+
+
 def input_to_search_string(input_string):
     search_string = input_string.replace(" ", "+")
     return search_string
@@ -90,7 +125,12 @@ def main():
         driver, f"https://www.youtube.com/results?search_query={video_search_string}"
     )
 
-    print(titles_list)
+    titles_arr = []
+    for title in titles_list:
+        titles_arr.append(title["title"])
+
+    better_titles = query_transcripts(str(titles_arr), video_description)
+    print(better_titles)
 
     # Close the WebDriver
     driver.quit()
