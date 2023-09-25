@@ -18,7 +18,6 @@ def initialize_driver(chromedriver_path: str):
 def navigate_to_url(driver, url: str):
     print(f"Navigating to {url}...")
     driver.get(url)
-    return
 
 
 def find_video_list(driver):
@@ -39,29 +38,35 @@ def find_video_list(driver):
 
 
 def extract_titles(driver, url):
-    # Check if the url is prefixed by https://minnstate.zoom.us/ or https://mediaspace.minnstate.edu/
+    # Check if the URL is for YouTube
     if url.startswith("https://www.youtube.com/"):
         # Navigate to the URL
         navigate_to_url(driver, url)
 
         # Find the video list
         video_list = find_video_list(driver)
-        video_elements = video_list.find_elements(By.XPATH, ".//ytd-video-renderer")
 
-        titles_list = []
+        if video_list:
+            # Find all video elements within the parent element
+            video_elements = video_list.find_elements(By.XPATH, ".//ytd-video-renderer")
 
-        for video_element in video_elements:
-            # Extract the title text from the video element
-            title_element = video_element.find_element(
-                By.XPATH, ".//a[@id='video-title']"
-            )
-            title = title_element.get_attribute("title")
-            titles_list.append({"title": title})
+            titles_list = []
 
+            for video_element in video_elements:
+                # Extract the title text from the video element
+                title_element = video_element.find_element(
+                    By.XPATH, ".//a[@id='video-title']"
+                )
+                title = title_element.get_attribute("title")
+                titles_list.append({"title": title})
+
+            return titles_list
+        else:
+            print("No video list found.")
+            return []
     else:
         print("Error: Invalid URL.")
-        return
-    return titles_list
+        return []
 
 
 def main():
@@ -70,9 +75,12 @@ def main():
 
     # Initialize WebDriver
     driver = initialize_driver(chromedriver_path)
+
+    # Extract titles from a YouTube search results page
     titles_list = extract_titles(
-        driver, "https://www.youtube.com/results?search_query=crypto"
+        driver, "https://www.youtube.com/results?search_query=javascript"
     )
+
     print(titles_list)
 
     # Close the WebDriver
